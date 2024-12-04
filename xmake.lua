@@ -8,7 +8,7 @@ set_languages("c++17")
 target("vulkan_learn")
     set_kind("binary")
     add_files("src/*.cpp")
-    add_files("vkl/*.cpp")
+    add_files("test/*.cpp")
     add_includedirs("include")
     -- vulkan
     add_includedirs("$(env VK_SDK_PATH)/Include")
