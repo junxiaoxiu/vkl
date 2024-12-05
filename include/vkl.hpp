@@ -2,8 +2,18 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vector"
+#include "vulkan/vulkan_handles.hpp"
+#include <optional>
 
 namespace vkl {
+
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value();
+    }
+};
 
 class Vklapp {
 public:
@@ -12,6 +22,9 @@ public:
     void quit();
 
     void createInstance();
+    void pickPhysicalDevice();
+    bool isSuitableDevice(vk::PhysicalDevice device);
+    QueueFamilyIndices findQueueFamilys(vk::PhysicalDevice device);
 
 // arguments main function pass on to Vklapp
 struct Arguments {
@@ -19,8 +32,10 @@ struct Arguments {
 };
 Arguments arguments;
 
+
 private:
-    vk::Instance instance;
+    vk::Instance instance{};
+    vk::PhysicalDevice physicalDevice{};
 
 };
 
