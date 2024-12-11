@@ -23,6 +23,7 @@ public:
 
     void createInstance();
     void pickPhysicalDevice();
+    void createLogicalDevice();
     bool isSuitableDevice(vk::PhysicalDevice device);
     QueueFamilyIndices findQueueFamilys(vk::PhysicalDevice device);
 
@@ -36,7 +37,8 @@ Arguments arguments;
 private:
     vk::Instance instance{};
     vk::PhysicalDevice physicalDevice{};
-
+    vk::Device logicalDevice{};
+    vk::Queue graphicsQueue{};
 };
 
 }
