@@ -9,9 +9,12 @@ int main() {
 
     vkl::Vklapp vulkan_app;
     vkl::Vklapp::Arguments& arguments = vulkan_app.arguments;
+    // layers need to open
     arguments.extensionLayers = {"VK_LAYER_KHRONOS_validation"};
+    // extensions which device needs to support
+    arguments.deviceExteneisons = {"VK_KHR_SWAPCHAIN_EXTENSION_NAME"};
 
-    vulkan_app.init();
+    vulkan_app.init(1024, 720);
 
     SDL_window_run();
 
