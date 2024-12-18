@@ -1,22 +1,26 @@
 #pragma once
 #include "vkl.hpp"
 #include "vulkan/vulkan.hpp"
-#include <array>
+#include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 #include <cstdint>
 #include <iostream>
 
 namespace vkl {
 
-void Vklapp::init(int width, int height) {
+void Vklapp::init(CreateSurfaceFunc func, int width, int height) {
     createInstance();
+    createSurface(func);
     pickPhysicalDevice();
     createLogicalDevice();
+    getQueues(); 
     swapchain.createSwapchain(physicalDevice, logicalDevice, surface, queueFamilyIndices, width, height);
 }
 
 void Vklapp::quit() {
     logicalDevice.destroySwapchainKHR(swapchain.swapchain);
     logicalDevice.destroy();
+    instance.destroySurfaceKHR(surface);
     instance.destroy();
 }
 
@@ -30,26 +34,44 @@ void Vklapp::createInstance() {
            .setPNext(nullptr)
            .sType = vk::StructureType::eApplicationInfo;
 
+#ifdef _DEBUG
+    std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
+#endif
+
     vk::InstanceCreateInfo createInfo{};
     createInfo.setPApplicationInfo(&appInfo)
-               .setPEnabledLayerNames(arguments.extensionLayers)
-               .sType = vk::StructureType::eInstanceCreateInfo;
+#ifdef _DEBUG
+              .setPEnabledLayerNames(layers)
+#endif
+              .setPEnabledExtensionNames(arguments.extensions);
 
     instance = vk::createInstance(createInfo);
+}
+
+void Vklapp::createSurface(CreateSurfaceFunc func) {
+    surface = func(instance);
 }
 
 void Vklapp::pickPhysicalDevice() {
     auto devices= instance.enumeratePhysicalDevices();
     if(devices.empty()) {
-        std::cout << "no suitable PhysicalDevice\n";
+        std::cout << "error: no suitable PhysicalDevice\n";
+        exit(-1);
     }
 
+    // physicalDevice = devices[0];
+    // std::cout << "pick device: " << devices[0].getProperties().deviceName << '\n';
     for(const auto& device : devices) {
         if(isSuitableDevice(device)) {
             physicalDevice = device;
             std::cout << "pick device: " << device.getProperties().deviceName;
             break;
         }
+    }
+
+    if(physicalDevice == VK_NULL_HANDLE) {
+        std::cout << "error: physical device pick up failed\n";
+        exit(-1);
     }
 }
 
@@ -83,14 +105,24 @@ void Vklapp::findQueueFamilys(vk::PhysicalDevice physicalDevice) {
 }
 
 bool Vklapp::checkDeviceExtensionsSupport(vk::PhysicalDevice phyDevice) {
-    auto availableExtensions = physicalDevice.enumerateDeviceExtensionProperties();
+    uint32_t count = 0;
+    std::vector<VkExtensionProperties> availableExtensions;
+    vkEnumerateDeviceExtensionProperties(phyDevice, nullptr, &count, nullptr);
+    availableExtensions.resize(count);
+    vkEnumerateDeviceExtensionProperties(phyDevice, nullptr, &count, availableExtensions.data());
+    
+    // program will crash if call api device.enumerateDeviceExtensionProperties(), don't know why
+    // so use the api vkEnumerateDeviceExtensionProperties()
+    // auto availableExtensions = physicalDevice.enumerateDeviceExtensionProperties();
+
+    std::vector<std::string> deviceExtensions(arguments.deviceExteneisons.begin(), arguments.deviceExteneisons.end());
 
     // judge if this phyDevice support all needed extensions 
     uint32_t satisfyExtensionsCnt = 0;
     for(const auto& availableExtension : availableExtensions) {
-        if(std::find(arguments.deviceExteneisons.begin(),
-                     arguments.deviceExteneisons.end(),
-                     availableExtension.extensionName.data()) != arguments.deviceExteneisons.end())
+        if(std::find(deviceExtensions.begin(),
+                     deviceExtensions.end(),
+                     availableExtension.extensionName) != deviceExtensions.end())
             satisfyExtensionsCnt += 1;
     }
 
@@ -100,27 +132,41 @@ bool Vklapp::checkDeviceExtensionsSupport(vk::PhysicalDevice phyDevice) {
 void Vklapp::createLogicalDevice() {
     findQueueFamilys(physicalDevice);
 
-    std::array extensions = {vk::KHRSwapchainExtensionName};
     float queuePriority = 1.0f;
 
-    vk::DeviceQueueCreateInfo queueCreateInfo;
-    queueCreateInfo.sType = vk::StructureType::eDeviceQueueCreateInfo;
-    queueCreateInfo.setQueueFamilyIndex(queueFamilyIndices.graphicsFamily.value())
-                   .setQueueCount(1)
-                   .setPQueuePriorities(&queuePriority);
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+    
+    if(queueFamilyIndices.graphicsFamily.value() == queueFamilyIndices.presentFamily.value()) {
+        vk::DeviceQueueCreateInfo queueCreateInfo;
+        queueCreateInfo.setQueueFamilyIndex(queueFamilyIndices.graphicsFamily.value())
+                       .setQueueCount(1)
+                       .setPQueuePriorities(&queuePriority);
+        queueCreateInfos.push_back(queueCreateInfo);
+    }else {
+        vk::DeviceQueueCreateInfo queueCreateInfo;
+        queueCreateInfo.setQueueFamilyIndex(queueFamilyIndices.graphicsFamily.value())
+                       .setQueueCount(1)
+                       .setPQueuePriorities(&queuePriority);
+        queueCreateInfos.push_back(queueCreateInfo);
+        queueCreateInfo.setQueueFamilyIndex(queueFamilyIndices.presentFamily.value())
+                       .setQueueCount(1)
+                       .setPQueuePriorities(&queuePriority);
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     vk::PhysicalDeviceFeatures deviceFeatures{};
     vk::DeviceCreateInfo createInfo;
-    createInfo.sType = vk::StructureType::eDeviceCreateInfo;
-    createInfo.setPQueueCreateInfos(&queueCreateInfo)
+    createInfo.setPQueueCreateInfos(queueCreateInfos.data())
               .setQueueCreateInfoCount(1)
               .setPEnabledFeatures(&deviceFeatures)
               .setEnabledExtensionCount(arguments.deviceExteneisons.size())
               .setPEnabledExtensionNames(arguments.deviceExteneisons);
     
     logicalDevice = physicalDevice.createDevice(createInfo);
-
-    logicalDevice.getQueue(queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
 }
 
+void Vklapp::getQueues() {
+    graphicsQueue = logicalDevice.getQueue(queueFamilyIndices.graphicsFamily.value(), 0);
+    presentQueue = logicalDevice.getQueue(queueFamilyIndices.presentFamily.value(), 0);
+}
 }

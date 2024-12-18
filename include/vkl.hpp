@@ -10,20 +10,22 @@ namespace vkl {
 
 class Vklapp {
 public:
-    void init(int width, int height);
+    void init(CreateSurfaceFunc func, int width, int height);
     void run();
     void quit();
 
     void createInstance();
+    void createSurface(CreateSurfaceFunc func);
     void pickPhysicalDevice();
     void createLogicalDevice();
     bool isSuitableDevice(vk::PhysicalDevice device);
     bool checkDeviceExtensionsSupport(vk::PhysicalDevice device);
     void findQueueFamilys(vk::PhysicalDevice device);
+    void getQueues();
 
     // arguments main function pass on to Vklapp
     struct Arguments {
-        std::vector<const char*> extensionLayers;
+        std::vector<const char*> extensions;
         std::vector<const char*> deviceExteneisons;
     };
     Arguments arguments;
@@ -32,6 +34,7 @@ public:
     vk::PhysicalDevice physicalDevice{};
     vk::Device logicalDevice{};
     vk::Queue graphicsQueue{};
+    vk::Queue presentQueue{};
     vk::SurfaceKHR surface{};
     vkl::SwapChain swapchain{};
     QueueFamilyIndices queueFamilyIndices{};

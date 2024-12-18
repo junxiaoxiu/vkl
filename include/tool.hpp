@@ -1,5 +1,9 @@
 #pragma once
+#include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_handles.hpp"
 #include <optional>
+#include <functional>
 
 namespace vkl{
 
@@ -11,5 +15,7 @@ struct QueueFamilyIndices {
         return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
+
+using CreateSurfaceFunc = std::function<vk::SurfaceKHR(vk::Instance&)>;
 
 }
