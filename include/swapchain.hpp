@@ -33,10 +33,13 @@ public:
     vk::PresentModeKHR chooseSwapchainPresentModeKHR();
     vk::Extent2D chooseSwapExtent(uint32_t width, uint32_t height);
     uint32_t chooseImageCount();
+    void createImageViews(vk::Device& logicalDevice);
+    void destroyImageViews(vk::Device& logicalDevice);
 
     int width, height;
     vk::SwapchainKHR swapchain{};
     std::vector<vk::Image> swapChainImages;
+    std::vector<vk::ImageView> swapChainImageViews;
 };
 
 }

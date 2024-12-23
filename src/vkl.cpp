@@ -15,9 +15,11 @@ void Vklapp::init(CreateSurfaceFunc func, int width, int height) {
     createLogicalDevice();
     getQueues(); 
     swapchain.createSwapchain(physicalDevice, logicalDevice, surface, queueFamilyIndices, width, height);
+    swapchain.createImageViews(logicalDevice);
 }
 
 void Vklapp::quit() {
+    swapchain.destroyImageViews(logicalDevice);
     logicalDevice.destroySwapchainKHR(swapchain.swapchain);
     logicalDevice.destroy();
     instance.destroySurfaceKHR(surface);

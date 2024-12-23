@@ -106,4 +106,31 @@ uint32_t SwapChain::chooseImageCount() {
     return imageCount;
 }
 
+void SwapChain::createImageViews(vk::Device& logicalDevice) {
+    swapChainImageViews.resize(swapChainImages.size());
+
+    for(size_t i = 0; i < swapChainImages.size(); i++) {
+        vk::ImageViewCreateInfo createInfo{};
+        vk::ComponentMapping mapping{};
+        vk::ImageSubresourceRange range{};
+
+        range.setAspectMask(vk::ImageAspectFlagBits::eColor)
+             .setBaseMipLevel(0)
+             .setLevelCount(1)
+             .setBaseArrayLayer(0)
+             .setLayerCount(1);
+        createInfo.setImage(swapChainImages[i])
+                  .setViewType(vk::ImageViewType::e2D)
+                  .setFormat(info.format.format)
+                  .setComponents(mapping)
+                  .setSubresourceRange(range);
+        swapChainImageViews[i] = logicalDevice.createImageView(createInfo);
+    }
+}
+
+void SwapChain::destroyImageViews(vk::Device &logicalDevice) {
+    for(auto& view : swapChainImageViews) {
+        logicalDevice.destroyImageView(view);
+    }
+}
 }
