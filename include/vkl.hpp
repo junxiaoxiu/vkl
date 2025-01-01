@@ -2,9 +2,12 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vector"
+#include <memory>
 #include <optional>
+#include <random>
 #include "tool.hpp"
 #include "swapchain.hpp"
+#include "shader.hpp"
 
 namespace vkl {
 
@@ -37,6 +40,7 @@ public:
     vk::Queue presentQueue{};
     vk::SurfaceKHR surface{};
     vkl::SwapChain swapchain{};
+    std::unique_ptr<vkl::Shader> shader;
     QueueFamilyIndices queueFamilyIndices{};
 
 };
