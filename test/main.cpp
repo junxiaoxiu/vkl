@@ -15,6 +15,9 @@ int main() {
     arguments.extensions = SDL_getInstanceExtension(window);
     // extensions which device needs to support
     arguments.deviceExteneisons = {"VK_KHR_swapchain"};
+    // set shader path
+    arguments.vertexShaderPath = "./shader/vert.spv";
+    arguments.fragmentShaderPath = "./shader/frag.spv";
 
     vulkan_app.init(
         [&window](vk::Instance &instance) {

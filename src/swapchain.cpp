@@ -128,9 +128,28 @@ void SwapChain::createImageViews(vk::Device& logicalDevice) {
     }
 }
 
+void SwapChain::createFramebuffers(vkl::RendeProcess& renderProcess, vk::Device& logicalDevice) {
+    framebuffers.resize(swapChainImageViews.size());
+    for(int i = 0; i < swapChainImageViews.size();i++) {
+        vk::FramebufferCreateInfo framebufferCreateInfo{};
+        framebufferCreateInfo.setAttachments(swapChainImageViews[i])
+                             .setWidth(width)
+                             .setHeight(height)
+                             .setRenderPass(renderProcess.renderpass)
+                             .setLayers(1);
+        framebuffers[i] = logicalDevice.createFramebuffer(framebufferCreateInfo);
+    }
+}
+
 void SwapChain::destroyImageViews(vk::Device &logicalDevice) {
+    for(auto& framebuffer : framebuffers) {
+        logicalDevice.destroyFramebuffer(framebuffer);
+    }
+
     for(auto& view : swapChainImageViews) {
         logicalDevice.destroyImageView(view);
     }
+
+    logicalDevice.destroySwapchainKHR(swapchain);
 }
 }

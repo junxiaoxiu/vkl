@@ -9,6 +9,7 @@ class RendeProcess {
 public:
     vk::Pipeline pipeline;
     vk::PipelineLayout layout;
+    vk::RenderPass renderpass;
 
     RendeProcess(vk::Device& logicalDevice, vkl::Shader& shader, int width, int height);
     ~RendeProcess();

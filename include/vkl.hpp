@@ -8,6 +8,7 @@
 #include "tool.hpp"
 #include "swapchain.hpp"
 #include "shader.hpp"
+#include "render_process.hpp"
 
 namespace vkl {
 
@@ -30,6 +31,8 @@ public:
     struct Arguments {
         std::vector<const char*> extensions;
         std::vector<const char*> deviceExteneisons;
+        std::string vertexShaderPath;
+        std::string fragmentShaderPath;
     };
     Arguments arguments;
 
@@ -40,7 +43,8 @@ public:
     vk::Queue presentQueue{};
     vk::SurfaceKHR surface{};
     vkl::SwapChain swapchain{};
-    std::unique_ptr<vkl::Shader> shader;
+    std::unique_ptr<vkl::Shader> shader_;
+    std::unique_ptr<vkl::RendeProcess> renderProcess;
     QueueFamilyIndices queueFamilyIndices{};
 
 };

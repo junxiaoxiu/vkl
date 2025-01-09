@@ -1,6 +1,7 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "tool.hpp"
+#include "render_process.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 
@@ -34,12 +35,14 @@ public:
     vk::Extent2D chooseSwapExtent(uint32_t width, uint32_t height);
     uint32_t chooseImageCount();
     void createImageViews(vk::Device& logicalDevice);
+    void createFramebuffers(vkl::RendeProcess& renderProcess, vk::Device& logicalDevice);
     void destroyImageViews(vk::Device& logicalDevice);
 
     int width, height;
     vk::SwapchainKHR swapchain{};
     std::vector<vk::Image> swapChainImages;
     std::vector<vk::ImageView> swapChainImageViews;
+    std::vector<vk::Framebuffer> framebuffers;
 };
 
 }

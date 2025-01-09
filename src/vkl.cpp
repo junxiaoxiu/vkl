@@ -1,5 +1,7 @@
 #pragma once
 #include "vkl.hpp"
+#include "render_process.hpp"
+#include "shader.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
@@ -16,6 +18,9 @@ void Vklapp::init(CreateSurfaceFunc func, int width, int height) {
     getQueues(); 
     swapchain.createSwapchain(physicalDevice, logicalDevice, surface, queueFamilyIndices, width, height);
     swapchain.createImageViews(logicalDevice);
+    shader_.reset(new vkl::Shader(logicalDevice, arguments.vertexShaderPath, arguments.fragmentShaderPath));
+    renderProcess.reset(new RendeProcess(logicalDevice, *shader_, width, height));
+    swapchain.createFramebuffers(*renderProcess, logicalDevice);
 }
 
 void Vklapp::quit() {
