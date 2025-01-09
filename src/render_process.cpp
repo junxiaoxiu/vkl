@@ -1,17 +1,19 @@
 #include "render_process.hpp"
 #include "shader.hpp"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <iostream>
 
 namespace vkl {
 
-RendeProcess::RendeProcess(vk::Device& logicalDevice, vkl::Shader& shader, int width, int height) 
+RendeProcess::RendeProcess(vk::Device& logicalDevice, vk::Format& format, vkl::Shader& shader, int width, int height) 
     : logicalDevice(logicalDevice), shader(shader)
 {
     InitPipeline(width, height);
     InitPipelineLayout();
+    createRenderPass(format);
 }
 
 RendeProcess::~RendeProcess() {
@@ -86,6 +88,38 @@ void RendeProcess::InitPipeline(int width, int height) {
 void RendeProcess::InitPipelineLayout() {
     vk::PipelineLayoutCreateInfo createInfo{};
     layout = logicalDevice.createPipelineLayout(createInfo);
+}
+
+void RendeProcess::createRenderPass(vk::Format& format) {
+    vk::AttachmentDescription colorAttachment{};
+    colorAttachment.setFormat(format)
+                   .setSamples(vk::SampleCountFlagBits::e1)
+                   .setLoadOp(vk::AttachmentLoadOp::eClear)
+                   .setStoreOp(vk::AttachmentStoreOp::eStore)
+                   .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+                   .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+                   .setInitialLayout(vk::ImageLayout::ePresentSrcKHR)
+                   .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+    
+    vk::AttachmentReference colorAttachmentRef{};
+    colorAttachmentRef.setAttachment(0)
+                      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+    vk::SubpassDescription subpass{};
+    subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+           .setColorAttachmentCount(1)
+           .setPColorAttachments(&colorAttachmentRef);
+
+    vk::RenderPassCreateInfo renderpassCreateInfo{};
+    renderpassCreateInfo.setAttachmentCount(1)
+                        .setPAttachments(&colorAttachment)
+                        .setSubpassCount(1)
+                        .setPSubpasses(&subpass);
+    
+    if(logicalDevice.createRenderPass(&renderpassCreateInfo, nullptr, &renderpass) != vk::Result::eSuccess) {
+        std::cout << "create renderpass failed\n";
+        exit(-1);
+    }
 }
 
 void RendeProcess::DestroyPipeline() {

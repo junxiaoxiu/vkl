@@ -19,7 +19,7 @@ void Vklapp::init(CreateSurfaceFunc func, int width, int height) {
     swapchain.createSwapchain(physicalDevice, logicalDevice, surface, queueFamilyIndices, width, height);
     swapchain.createImageViews(logicalDevice);
     shader_.reset(new vkl::Shader(logicalDevice, arguments.vertexShaderPath, arguments.fragmentShaderPath));
-    renderProcess.reset(new RendeProcess(logicalDevice, *shader_, width, height));
+    renderProcess.reset(new RendeProcess(logicalDevice, swapchain.info.format.format, *shader_, width, height));
     swapchain.createFramebuffers(*renderProcess, logicalDevice);
 }
 
